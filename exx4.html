@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html ng-app="todoApp">
+<head>
+<title>SMR To-Do List</title>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+<style>
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    transition:0.3s;
+}
+.dark{
+    background:#1e1e1e;
+    color:white;
+}
+.container{
+    width:700px;
+    margin:30px auto;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    background:white;
+}
+.dark .container{
+    background:#2c2c2c;
+}
+h2{text-align:center; color:#007acc;}
+input,select{
+    padding:8px;
+    margin:5px;
+}
+button{
+    padding:8px 12px;
+    cursor:pointer;
+    border:none;
+    border-radius:5px;
+}
+button:hover{
+    opacity:0.8;
+}
+.task{
+    padding:10px;
+    margin:10px 0;
+    border-radius:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:white;
+}
+.task.high{ background:#e74c3c; }      
+.task.medium{ background:#f39c12; }    
+.task.low{ background:#2ecc71; }       
+.dark .task.high{ background:#c0392b; }
+.dark .task.medium{ background:#d35400; }
+.dark .task.low{ background:#27ae60; }
+
+.completed{
+    text-decoration:line-through;
+    opacity:0.7;
+}
+.top-bar{
+    display:flex;
+    justify-content:space-between;
+}
+.filter-btn{
+    margin-right:5px;
+    background:#007acc;
+    color:white;
+}
+.filter-btn:hover{
+    opacity:0.9;
+}
+.counter{
+    font-weight:bold;
+    margin:10px 0;
+}
+</style>
+</head>
+
+<body ng-controller="TodoController" ng-class="{'dark':darkMode}">
+
+<div class="container">
+
+    <div class="top-bar">
+        <h2>Welcome to SMR To-Do List</h2>
+        <div>
+            <button ng-click="toggleDark()">🌙</button>
+        </div>
+    </div>
+
+    <!-- ADD TASK -->
+    <input type="text" ng-model="newTask.title" placeholder="Task Title">
+    <input type="date" ng-model="newTask.date">
+    <select ng-model="newTask.priority">
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+    </select>
+    <button ng-click="addTask()">Add Task</button>
+
+    <hr>
+
+    <!-- FILTER -->
+    <button class="filter-btn" ng-click="filterStatus=''">All</button>
+    <button class="filter-btn" ng-click="filterStatus=false">Pending</button>
+    <button class="filter-btn" ng-click="filterStatus=true">Completed</button>
+
+    <!-- TOTAL COUNT -->
+    <div class="counter">Total Tasks: {{tasks.length}}</div>
+
+    <!-- TASK LIST -->
+    <div class="task"
+         ng-class="task.priority.toLowerCase()"
+         ng-repeat="task in tasks | filter:filterCompleted">
+         
+        <div>
+            <span ng-class="{'completed':task.completed}">
+                {{task.title}}
+            </span>
+            <br>
+            <small>Due: {{task.date || 'N/A'}} | Priority: {{task.priority}}</small>
+        </div>
+
+        <div>
+            <button ng-click="toggleComplete(task)">✔</button>
+            <button ng-click="editTask(task)">✏</button>
+            <button ng-click="deleteTask($index)">🗑</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+angular.module("todoApp",[])
+.controller("TodoController",function($scope){
+
+$scope.tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+$scope.darkMode = false;
+$scope.filterStatus = "";
+
+// FILTER FUNCTION
+$scope.filterCompleted = function(task){
+    if($scope.filterStatus==='') return true;
+    return task.completed === $scope.filterStatus;
+}
+
+// SAVE TO LOCAL STORAGE
+$scope.saveTasks = function(){
+    localStorage.setItem("tasks",JSON.stringify($scope.tasks));
+};
+
+// DARK MODE
+$scope.toggleDark = function(){
+    $scope.darkMode = !$scope.darkMode;
+};
+
+// ADD TASK
+$scope.addTask = function(){
+    if($scope.newTask && $scope.newTask.title){
+        $scope.newTask.completed=false;
+        $scope.tasks.push(angular.copy($scope.newTask));
+        $scope.newTask={};
+        $scope.saveTasks();
+    }
+};
+
+// TOGGLE COMPLETE
+$scope.toggleComplete = function(task){
+    task.completed = !task.completed;
+    $scope.saveTasks();
+};
+
+// DELETE TASK
+$scope.deleteTask = function(index){
+    $scope.tasks.splice(index,1);
+    $scope.saveTasks();
+};
+
+// EDIT TASK
+$scope.editTask = function(task){
+    let newTitle = prompt("Edit Task Title:",task.title);
+    if(newTitle!==null){
+        task.title = newTitle;
+    }
+    let newDate = prompt("Edit Due Date (YYYY-MM-DD):", task.date || "");
+    if(newDate!==null){
+        task.date = newDate;
+    }
+    let newPriority = prompt("Edit Priority (High/Medium/Low):", task.priority || "Low");
+    if(newPriority!==null){
+        task.priority = newPriority;
+    }
+    $scope.saveTasks();
+};
+
+});
+</script>
+
+</body>
+</html>
