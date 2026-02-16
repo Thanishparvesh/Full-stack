@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMR Professional Quiz</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body{
+            margin:0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg,#141e30,#243b55);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+        }
+        .card{
+            width:520px;
+            background:#ffffff;
+            padding:30px;
+            border-radius:15px;
+            box-shadow:0 15px 35px rgba(0,0,0,0.4);
+            position:relative;
+            animation:fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn{
+            from{opacity:0;transform:translateY(20px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+        h2{
+            text-align:center;
+            margin-bottom:20px;
+            color:#243b55;
+        }
+        #timer{
+            position:absolute;
+            top:20px;
+            right:25px;
+            font-weight:bold;
+            color:#e74a3b;
+        }
+        input[type=text],input[type=password]{
+            width:100%;
+            padding:10px;
+            margin:10px 0;
+            border-radius:8px;
+            border:1px solid #ccc;
+            font-size:14px;
+        }
+        .option{
+            background:#f8f9fc;
+            padding:10px;
+            margin:8px 0;
+            border-radius:8px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+        .option:hover{
+            background:#d1ecf1;
+        }
+        button{
+            width:100%;
+            padding:10px;
+            margin-top:15px;
+            border:none;
+            border-radius:8px;
+            background:#243b55;
+            color:white;
+            font-size:16px;
+            cursor:pointer;
+        }
+        button:hover{
+            background:#141e30;
+        }
+        .hidden{display:none;}
+        #progress{
+            font-size:13px;
+            margin-bottom:10px;
+            color:#666;
+        }
+        #loginMsg{
+            text-align:center;
+            color:red;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="card" id="loginBox">
+    <h2>SMR Online Assessment</h2>
+    <input type="text" id="username" placeholder="Enter Username">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg"></p>
+</div>
+
+<!-- QUIZ -->
+<div class="card hidden" id="quizBox">
+    <div id="timer">60</div>
+    <div id="progress"></div>
+    <h2 id="questionTitle"></h2>
+    <div id="optionsArea"></div>
+    <button id="nextBtn">Next</button>
+</div>
+
+<!-- RESULT -->
+<div class="card hidden" id="resultBox">
+    <h2>Assessment Completed</h2>
+    <p id="finalScore"></p>
+</div>
+
+<script>
+$(document).ready(function(){
+
+    const questions = [
+        {
+            type:"multi",
+            question:"Select Frontend Technologies:",
+            options:["HTML","CSS","JavaScript","PHP"],
+            answer:["HTML","CSS","JavaScript"]
+        },
+        {
+            type:"multi",
+            question:"Select Backend Technologies:",
+            options:["PHP","Node.js","Laravel","CSS"],
+            answer:["PHP","Node.js","Laravel"]
+        },
+        {
+            type:"single",
+            question:"Which is NoSQL Database?",
+            options:["MongoDB","MySQL","Oracle"],
+            answer:"MongoDB"
+        },
+        {
+            type:"single",
+            question:"Git is used for?",
+            options:["Version Control","Designing","Database"],
+            answer:"Version Control"
+        },
+        {
+            type:"single",
+            question:"HTTPS stands for?",
+            options:["Hyper Text Transfer Protocol Secure","High Transfer Process","None"],
+            answer:"Hyper Text Transfer Protocol Secure"
+        }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let time = 60;
+    let timer;
+
+    // LOGIN (Your Credentials)
+    $("#loginBtn").click(function(){
+        if($("#username").val()=="parvesh" && $("#password").val()=="1234"){
+            $("#loginBox").addClass("hidden");
+            $("#quizBox").removeClass("hidden");
+            loadQuestion();
+            startTimer();
+        }else{
+            $("#loginMsg").text("Invalid Username or Password");
+        }
+    });
+
+    function startTimer(){
+        timer = setInterval(function(){
+            time--;
+            $("#timer").text(time + "s");
+            if(time<=0){
+                clearInterval(timer);
+                showResult();
+            }
+        },1000);
+    }
+
+    function loadQuestion(){
+        let q = questions[current];
+        $("#progress").text("Question " + (current+1) + " of 5");
+        $("#questionTitle").text(q.question);
+        $("#optionsArea").empty();
+
+        q.options.forEach(function(opt){
+            if(q.type=="multi"){
+                $("#optionsArea").append(
+                    `<div class="option">
+                        <input type="checkbox" value="${opt}"> ${opt}
+                    </div>`
+                );
+            }else{
+                $("#optionsArea").append(
+                    `<div class="option">
+                        <input type="radio" name="single" value="${opt}"> ${opt}
+                    </div>`
+                );
+            }
+        });
+    }
+
+    $("#nextBtn").click(function(){
+
+        let q = questions[current];
+        let selected = [];
+
+        if(q.type=="multi"){
+            $("#optionsArea input:checked").each(function(){
+                selected.push($(this).val());
+            });
+
+            if(JSON.stringify(selected.sort()) === JSON.stringify(q.answer.sort())){
+                score++;
+            }
+        }else{
+            if($("#optionsArea input:checked").val() === q.answer){
+                score++;
+            }
+        }
+
+        current++;
+
+        if(current < questions.length){
+            loadQuestion();
+        }else{
+            clearInterval(timer);
+            showResult();
+        }
+    });
+
+    function showResult(){
+        $("#quizBox").addClass("hidden");
+        $("#resultBox").removeClass("hidden");
+        $("#finalScore").html(
+            "Username: parvesh <br><br>Your Score: " + score + " / 5"
+        );
+    }
+
+});
+</script>
+
+</body>
+</html>
